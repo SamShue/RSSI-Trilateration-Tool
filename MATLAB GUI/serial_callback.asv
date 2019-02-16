@@ -4,7 +4,7 @@ handles = guidata(hObject);
 [data count msg] = fread(serialObject,1);
 
 if(numel(data))
-    if(data(1)==hex2dec('F0')) % F0 - flag to indicate message for coordinator
+    if(data(1)==hex2dec('F0'))
         %fprintf(data(1));
         %feval(s{1}, event, eventStruct, s{2:end});
         len = fread(serialObject, 1);   % Get length of packet delivered
@@ -129,49 +129,47 @@ if(numel(data))
 
     % Get Trilaterated position if possible
     %==========================================================================
-    if(~isempty(handles.mobileData(1).addr))
-        for ii = 1:length(handles.mobileData)
-            % Position (X) and distance (d) vectors for trilateration
-            X = []; d = []; idxList = []; R = [];
-            for jj = 1:length(handles.mobileData(ii).anchorData)
-                % find anchor node in anchor list to retrive position
-                for kk = 1:length(handles.nodeData)
-                    % If a listed anchor is found, record position and distance in
-                    % vectors
-                    if(strcmp(handles.nodeData(kk).addr,handles.mobileData(ii).anchorData(jj).addr))
-        %                 handles.mobileData(ii).anchorData(jj).pos = handles.nodeData(kk).pos;
-                        % Expired data will be set empty, only use valid data
-                        %if(~isempty(handles.mobileData(ii).anchorData(jj).dist))
-                        if(handles.mobileData(ii).anchorData(jj).freshness) % Only use the freshest data
-                            X = [X;handles.nodeData(kk).pos];
-                            d = [d;handles.mobileData(ii).anchorData(jj).dist];
-                            R = [R;handles.mobileData(ii).anchorData(jj).rssi(end)];
-                            handles.mobileData(ii).anchorData(jj).freshness = 0;
-        % %                     idxList = [idxList;jj];
-                        end
+    for ii = 1:length(handles.mobileData)
+        % Position (X) and distance (d) vectors for trilateration
+        X = []; d = []; idxList = []; R = [];
+        for jj = 1:length(handles.mobileData(ii).anchorData)
+            % find anchor node in anchor list to retrive position
+            for kk = 1:length(handles.nodeData)
+                % If a listed anchor is found, record position and distance in
+                % vectors
+                if(strcmp(handles.nodeData(kk).addr,handles.mobileData(ii).anchorData(jj).addr))
+    %                 handles.mobileData(ii).anchorData(jj).pos = handles.nodeData(kk).pos;
+                    % Expired data will be set empty, only use valid data
+                    %if(~isempty(handles.mobileData(ii).anchorData(jj).dist))
+                    if(handles.mobileData(ii).anchorData(jj).freshness) % Only use the freshest data
+                        X = [X;handles.nodeData(kk).pos];
+                        d = [d;handles.mobileData(ii).anchorData(jj).dist];
+                        R = [R;handles.mobileData(ii).anchorData(jj).rssi(end)];
+                        handles.mobileData(ii).anchorData(jj).freshness = 0;
+    % %                     idxList = [idxList;jj];
                     end
                 end
             end
-            % Trilaterate mobile(ii)'s position
-        %     handles.mobileData(ii).pos = trilat(X,d);
-            if(length(d) > 1)   % Safety check
-                handles.mobileData(ii).pos = trilat2(X,d,R);
-
-                % Store position history
-                if(~isfield(handles.mobileData(ii),'posHist'))  % Create variable
-                    handles.mobileData(ii).posHist(1,:) = handles.mobileData(ii).pos;
-                else
-                    if(length(handles.mobileData(ii).posHist) >= 10)
-                        handles.mobileData(ii).posHist = circshift(handles.mobileData(ii).posHist,[-1 0]);
-                        handles.mobileData(ii).posHist(10,:) = handles.mobileData(ii).pos;
-                    else
-                        [len,~] = size(handles.mobileData(ii).posHist);
-                        handles.mobileData(ii).posHist(len+1,:) = handles.mobileData(ii).pos;
-                    end
-                end
-            end
-
         end
+        % Trilaterate mobile(ii)'s position
+    %     handles.mobileData(ii).pos = trilat(X,d);
+        if(length(d) > 1)   % Safety check
+            handles.mobileData(ii).pos = trilat2(X,d,R);
+        end
+
+        % Store position history
+        if(~isfield(handles.mobileData(ii),'posHist'))  % Create variable
+            handles.mobileData(ii).posHist(1,:) = handles.mobileData(ii).pos;
+        else
+            if(length(handles.mobileData(ii).posHist) >= 10)
+                handles.mobileData(ii).posHist = circshift(handles.mobileData(ii).posHist,[-1 0]);
+                handles.mobileData(ii).posHist(10,:) = handles.mobileData(ii).pos;
+            else
+                [len,~] = size(handles.mobileData(ii).posHist);
+                handles.mobileData(ii).posHist(len+1,:) = handles.mobileData(ii).pos;
+            end
+        end
+
     end
     %--------------------------------------------------------------------------
 

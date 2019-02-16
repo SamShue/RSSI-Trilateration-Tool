@@ -517,7 +517,7 @@ idx = get(handles.mobileNodeList,'Value');
 % Generate Dialogue box to get user input
 if(~isempty(handles.mobileData(1).addr))
     if(isempty(handles.mobileData(idx).pos))
-        msg = {sprintf('Address: %s\n   Position: NA\n', char(val))};
+        msg = {sprintf('Address: %s\n   Position: NA, \n', char(val)};
     else
         msg = {sprintf('Address: %s\n   Position: %0.2f, %0.2f, \n',char(val), handles.mobileData(idx).pos(1), handles.mobileData(idx).pos(2))};
     end
