@@ -238,13 +238,13 @@ void receiveMobilePackets(int delayTime) {
             addr_list[sizeOfList-1] = (long)rx.getRemoteAddress64().getLsb();
           }
         }
-        //Serial.println("Adding to anchor list!");
-        //Serial.println(addr_list[sizeOfList-1],HEX);
+        Serial.println("Adding to anchor list!");
+        Serial.println(addr_list[sizeOfList-1],HEX);
       }
       else if(rx.getFrameData()[rx.getDataOffset()] == 0xFD) { // Mobile Polling Frequency
         delay_time_ms = rx.getFrameData()[rx.getDataOffset() + 1];
-        //Serial.println("Adding to anchor list!");
-        //Serial.println(addr_list[sizeOfList-1],HEX);
+        Serial.println("Adding to anchor list! 0xFD");
+        Serial.println(addr_list[sizeOfList-1],HEX);
       }
     }
   }
@@ -305,12 +305,15 @@ void getRSSIFromAnchors()
       tx.setPayload(payload);
       tx.setPayloadLength(sizeof(payload));
       tx.setAddress64(addr64);
+      Serial.print("Requesting RSSI from anchor: ");
+      Serial.println(addr_list[i], HEX);
       // Trasmit RSSI Request Packet................................................................
       xbee.send(tx);
       // Wait for response..........................................................................
       xbee.readPacket(delay_time_ms);  // wait for packet response up to X ms     
       if (xbee.getResponse().isAvailable()) {
         // got something
+        Serial.println("Received response after requesting RSSI");
         if (xbee.getResponse().getApiId() == ZB_RX_RESPONSE) {
           // got a zb rx packet
           digitalWrite(13,HIGH);
@@ -322,8 +325,8 @@ void getRSSIFromAnchors()
             mobilePayload[(j)*5 + 6] = rx.getFrameData()[rx.getDataOffset()+1];  // second bit of payload contains RSSI value
             mobilePayload[(j)*5 + 7] = (long)(rx.getRemoteAddress64().getLsb() >> 24) & 0xFF;
             mobilePayload[(j)*5 + 8] = (long)(rx.getRemoteAddress64().getLsb() >> 16) & 0xFF;
-    	    mobilePayload[(j)*5 + 9] = (long)(rx.getRemoteAddress64().getLsb() >> 8) & 0xFF;
-    	    mobilePayload[(j)*5 + 10] = (long)rx.getRemoteAddress64().getLsb() & 0xFF;
+    	      mobilePayload[(j)*5 + 9] = (long)(rx.getRemoteAddress64().getLsb() >> 8) & 0xFF;
+    	      mobilePayload[(j)*5 + 10] = (long)rx.getRemoteAddress64().getLsb() & 0xFF;
             j++;
             transmitFlag = 1;
           }
